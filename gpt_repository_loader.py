@@ -19,13 +19,28 @@ def should_ignore(file_path, ignore_list):
             return True
     return False
 
+def is_excluded_file(file_path):
+    excluded_extensions = [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".mp4", ".mkv", ".avi", ".mov", ".mp3", ".wav"]
+    excluded_directories = ["node_modules", "__pycache__", ".git", "venv", "env"]
+
+    # Check for excluded extensions
+    if any(file_path.endswith(ext) for ext in excluded_extensions):
+        return True
+
+    # Check for excluded directories
+    path_parts = file_path.split(os.sep)
+    if any(part in excluded_directories for part in path_parts):
+        return True
+
+    return False
+
 def process_repository(repo_path, ignore_list, output_file):
     for root, _, files in os.walk(repo_path):
         for file in files:
             file_path = os.path.join(root, file)
             relative_file_path = os.path.relpath(file_path, repo_path)
 
-            if not should_ignore(relative_file_path, ignore_list):
+            if not should_ignore(relative_file_path, ignore_list) and not is_excluded_file(relative_file_path):
                 with open(file_path, 'r', errors='ignore') as file:
                     contents = file.read()
                 output_file.write("-" * 4 + "\n")
@@ -71,4 +86,3 @@ if __name__ == "__main__":
     with open(output_file_path, 'a') as output_file:
         output_file.write("--END--")
     print(f"Repository contents written to {output_file_path}.")
-    
